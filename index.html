@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<title>BAFS《茶餐廳創業物語》— 開羅風格經營模擬 (Godot 4 Web 版)</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	width: 100%;
+	height: 100%;
+}
+body {
+	color: white;
+	background-color: #121820;
+	overflow: hidden;
+	touch-action: none;
+	font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "Microsoft JhengHei", sans-serif;
+}
+#canvas {
+	display: block;
+}
+#canvas:focus {
+	outline: none;
+}
+#status {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background: radial-gradient(circle at center, #1e2d24 0%, #0d131a 100%);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	z-index: 10;
+}
+.loading-card {
+	background: rgba(16, 22, 34, 0.92);
+	border: 3px solid #ffd166;
+	border-radius: 12px;
+	padding: 24px 32px;
+	text-align: center;
+	max-width: 420px;
+	box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+.loading-title {
+	font-size: 20px;
+	font-weight: bold;
+	color: #ffd166;
+	margin-bottom: 8px;
+}
+.loading-sub {
+	font-size: 13px;
+	color: #caf0f8;
+	margin-bottom: 16px;
+	line-height: 1.5;
+}
+#status-progress {
+	width: 100%;
+	height: 18px;
+	accent-color: #2b9348;
+}
+#status-pct {
+	font-size: 13px;
+	color: #80ed99;
+	margin-top: 8px;
+}
+#status-notice {
+	display: none;
+	background-color: #5b3943;
+	border-radius: 8px;
+	border: 1px solid #ff4d6d;
+	color: #fff;
+	padding: 12px 16px;
+	margin-top: 12px;
+	font-size: 13px;
+}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas">
+			你的瀏覽器不支援 HTML5 Canvas。
+		</canvas>
+
+		<div id="status">
+			<div class="loading-card">
+				<div class="loading-title">🧋 BAFS《茶餐廳創業物語》</div>
+				<div class="loading-sub">
+					開羅《Game Dev Story》風格茶餐廳經營與會計模擬<br>
+					📱 手機建議橫向握持遊玩・支援直接點擊客人/卡座互動
+				</div>
+				<progress id="status-progress" value="0" max="100"></progress>
+				<div id="status-pct">正在載入茶餐廳舞台與像素角色...</div>
+				<div id="status-notice"></div>
+			</div>
+		</div>
+
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {
+	"args": [],
+	"canvasResizePolicy": 2,
+	"ensureCrossOriginIsolationHeaders": false,
+	"executable": "index",
+	"experimentalVK": false,
+	"fileSizes": {
+		"index.pck": 10911340,
+		"index.wasm": 39514754
+	},
+	"focusCanvas": true,
+	"gdextensionLibs": []
+};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusPct = document.getElementById('status-pct');
+	const statusNotice = document.getElementById('status-notice');
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		statusNotice.style.display = 'block';
+		statusNotice.textContent = err instanceof Error ? err.message : String(err);
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		displayFailureNotice('瀏覽器缺少必要功能：\n' + missing.join('\n'));
+	} else {
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+					const pct = Math.min(100, Math.round((current / total) * 100));
+					statusPct.textContent = '正在載入茶餐廳資源... ' + pct + '%';
+				}
+			},
+		}).then(() => {
+			statusOverlay.remove();
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>
